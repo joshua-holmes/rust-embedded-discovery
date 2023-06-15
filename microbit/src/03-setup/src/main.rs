@@ -9,6 +9,6 @@ use cortex_m_rt::entry;
 #[entry]
 fn main() -> ! {
     rtt_init_print!();
-    rprintln!("Hello World");
+    rprintln!("Hello World from the Micro:Bit!");
     loop {}
 }
