@@ -1,41 +1,43 @@
+use rtt_target::rprintln;
 
 type Screen = [[u8; 5]; 5];
 
-enum VocabErrors {
+pub enum VocabErrors {
     NoMoreLetters
 }
 
-struct Scroller<'a> {
-    word: &'a str,
+pub struct Scroller<'a> {
+    msg: &'a str,
     next_letter_index: usize,
     scroll_offset: usize,
 }
 
 impl <'a> Scroller<'a> {
-    fn new(word: &str) -> Self {
+    pub fn new(msg: &'a str) -> Self {
         Self {
-            word,
+            msg,
             next_letter_index: 0,
             scroll_offset: 0,
         }
     }
 
-    fn scroll(&mut self) -> Result<Screen, VocabErrors> {
-        if self.next_letter_index > self.word.len() {
+    pub fn scroll(&mut self) -> Result<Screen, VocabErrors> {
+        if self.next_letter_index > self.msg.len() {
             return Err(VocabErrors::NoMoreLetters);
         }
+
 
         let cur_led_letter = if self.next_letter_index == 0 {
             [[0; 5]; 5]
         } else {
-            let cur_letter = self.word.chars().nth(self.next_letter_index - 1);
+            let cur_letter = self.msg.chars().nth(self.next_letter_index - 1);
             match cur_letter {
                 Some(l) => get_led_letter(&l),
-                None => panic!("Attempted to reach index {} of word \"{}\"", self.next_letter_index, self.word)
+                None => panic!("Attempted to reach index {} of msg \"{}\"", self.next_letter_index, self.msg)
             }
         };
 
-        let next_letter = self.word.chars().nth(self.next_letter_index);
+        let next_letter = self.msg.chars().nth(self.next_letter_index);
         let next_led_letter = match next_letter {
             Some(l) => get_led_letter(&l),
             None => [[0; 5]; 5]
@@ -53,12 +55,20 @@ impl <'a> Scroller<'a> {
             }
         }
 
+        if self.scroll_offset >= 4 {
+            self.scroll_offset = 0;
+            self.next_letter_index += 1;
+        } else {
+            self.scroll_offset += 1;
+        }
+
         Ok(screen)
     }
 }
 
 pub fn get_led_letter(letter: &char) -> [[u8; 5]; 5] {
     match letter {
+        ' ' => [[0; 5]; 5],
         'A' => {[
             [0, 0, 1, 0, 0],
             [0, 1, 0, 1, 0],

@@ -8,9 +8,9 @@ edition = "2018"
 version = "0.12.0"
 optional = true
 
-[dependencies.microbit]
-version = "0.12.0"
-optional = true
+# [dependencies.microbit]
+# version = "0.12.0"
+# optional = true
 
 [dependencies]
 cortex-m = "0.7.3"
@@ -27,4 +27,4 @@ panic-rtt-target = { version = "0.1.2", features = ["cortex-m"] }
 
 [features]
 v2 = ["microbit-v2"]
-v1 = ["microbit"]
+# v1 = ["microbit"]
