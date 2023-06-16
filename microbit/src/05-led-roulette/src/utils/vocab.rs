@@ -1,5 +1,3 @@
-use rtt_target::rprintln;
-
 type Screen = [[u8; 5]; 5];
 
 pub enum VocabErrors {
