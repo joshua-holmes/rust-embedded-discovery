@@ -62,7 +62,7 @@ fn main() -> ! {
         let letter = from_utf8(&bytes[0..=b_index]);
         match letter {
             Ok(val) => {
-                write!(serial, "{}", val).unwrap();
+                write!(serial, "{}\r\n", val).unwrap();
                 nb::block!(serial.flush()).unwrap();
                 bytes = [0; 4];
                 b_index = 0;
