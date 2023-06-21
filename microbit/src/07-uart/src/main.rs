@@ -2,9 +2,12 @@
 #![no_std]
 
 use cortex_m_rt::entry;
-use rtt_target::rtt_init_print;
+use rtt_target::{rtt_init_print, rprintln};
 use panic_rtt_target as _;
-use core::fmt::Write;
+use core::{
+    fmt::Write,
+    str::from_utf8,
+};
 
 #[cfg(feature = "v1")]
 use microbit::{
@@ -56,5 +59,21 @@ fn main() -> ! {
     write!(serial, "{}", string).unwrap();
     nb::block!(serial.flush()).unwrap();
 
-    loop {}
+    let mut bytes: [u8; 4] = [0; 4];
+    let mut b_index: usize = 0;
+    loop {
+        bytes[b_index] = nb::block!(serial.read()).unwrap();
+        let letter = from_utf8(&bytes[0..=b_index]);
+        match letter {
+            Ok(val) => {
+                rprintln!("good {:?}", val);
+                bytes = [0; 4];
+                b_index = 0;
+            },
+            Err(err) => {
+                rprintln!("bad {:?}", err);
+                b_index += 1;
+            }
+        }
+    }
 }
