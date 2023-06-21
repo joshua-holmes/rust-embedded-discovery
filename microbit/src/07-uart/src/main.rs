@@ -54,10 +54,6 @@ fn main() -> ! {
         UartePort::new(serial)
     };
 
-    let string = "The quick brown fox jumps over the lazy dog.\r\n";
-
-    write!(serial, "{}", string).unwrap();
-    nb::block!(serial.flush()).unwrap();
 
     let mut bytes: [u8; 4] = [0; 4];
     let mut b_index: usize = 0;
@@ -66,7 +62,8 @@ fn main() -> ! {
         let letter = from_utf8(&bytes[0..=b_index]);
         match letter {
             Ok(val) => {
-                rprintln!("good {:?}", val);
+                write!(serial, "{}", val).unwrap();
+                nb::block!(serial.flush()).unwrap();
                 bytes = [0; 4];
                 b_index = 0;
             },
