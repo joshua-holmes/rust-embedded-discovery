@@ -54,23 +54,28 @@ fn main() -> ! {
         UartePort::new(serial)
     };
 
+    // let mut string: &str = "";
 
-    let mut bytes: [u8; 4] = [0; 4];
+    let mut bytes: [u8; 1024] = [0; 1024];
     let mut b_index: usize = 0;
     loop {
-        bytes[b_index] = nb::block!(serial.read()).unwrap();
-        let letter = from_utf8(&bytes[0..=b_index]);
-        match letter {
-            Ok(val) => {
-                write!(serial, "{}\r\n", val).unwrap();
-                nb::block!(serial.flush()).unwrap();
-                bytes = [0; 4];
-                b_index = 0;
-            },
-            Err(err) => {
-                rprintln!("bad {:?}", err);
-                b_index += 1;
+        let byte = nb::block!(serial.read()).unwrap();
+        bytes[b_index] = byte;
+        if byte == 13 {
+            let string = from_utf8(&bytes);
+            match string {
+                Ok(s) => {
+                    write!(serial, "{}\r\n", s).unwrap();
+                    nb::block!(serial.flush()).unwrap();
+                },
+                Err(err) => {
+                    rprintln!("Failed to decode string: {}", err);
+                }
             }
+            bytes = [0; 1024];
+            b_index = 0;
+        } else {
+            b_index += 1;
         }
     }
 }
