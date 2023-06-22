@@ -71,6 +71,7 @@ fn main() -> ! {
         } else {
             nb::block!(serial.read()).unwrap()
         };
+
         if byte == 13 {
             let string = str::from_utf8(&bytes[b_index..]);
             match string {
@@ -90,13 +91,18 @@ fn main() -> ! {
             utf8_index = 0;
             end_buffer = false;
             rprintln!("After reset {:?}", bytes);
-        } else if utf8_index >= bytes_length {
-            write!(serial, "\r\nBuffer is full.");
-            rprintln!("Buffer is full.");
-            end_buffer = true;
         } else {
             utf8_char[utf8_index] = byte;
             if let Ok(char) = str::from_utf8(&utf8_char) {
+                if bytes_length <= utf8_index + 1 {
+                    write!(serial, "\r\nBuffer is full.");
+                    rprintln!("Buffer is full.");
+                    end_buffer = true;
+                    if bytes_length < utf8_index + 1 {
+                        continue;
+                    }
+                }
+
                 for (i, b) in utf8_char[..=utf8_index].iter().enumerate() {
                     bytes[b_index + i] = *b;
                 }
