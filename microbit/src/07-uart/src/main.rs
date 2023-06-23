@@ -56,7 +56,7 @@ fn main() -> ! {
         UartePort::new(serial)
     };
 
-    const MAX_BYTES: usize = 16;
+    const MAX_BYTES: usize = 1024;
 
     let mut bytes: [u8; MAX_BYTES] = [0; MAX_BYTES];
     let mut bytes_length: usize = MAX_BYTES;
@@ -65,7 +65,6 @@ fn main() -> ! {
     let mut utf8_index: usize = 0;
     let mut end_buffer: bool = false;
     loop {
-        rprintln!("at loop {:?}", bytes);
         let byte = if end_buffer {
             13
         } else {
@@ -90,10 +89,12 @@ fn main() -> ! {
             utf8_char = [0; 4];
             utf8_index = 0;
             end_buffer = false;
-            rprintln!("After reset {:?}", bytes);
         } else {
             utf8_char[utf8_index] = byte;
             if let Ok(char) = str::from_utf8(&utf8_char) {
+                write!(serial, "{}", char);
+                nb::block!(serial.flush()).unwrap();
+
                 if bytes_length <= utf8_index + 1 {
                     write!(serial, "\r\nBuffer is full.");
                     rprintln!("Buffer is full.");
@@ -108,12 +109,9 @@ fn main() -> ! {
                 }
                 utf8_index = 0;
                 bytes_length = b_index;
-                write!(serial, "{}", char);
-                nb::block!(serial.flush()).unwrap();
             } else if utf8_index < 3 {
                 utf8_index += 1;
             } else {
-                rprintln!("Something ain't right: {}, {:?}", utf8_index, utf8_char);
                 utf8_index = 0;
             }
 
