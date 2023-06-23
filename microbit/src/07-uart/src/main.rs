@@ -4,6 +4,7 @@
 use cortex_m_rt::entry;
 use rtt_target::{rtt_init_print, rprintln};
 use panic_rtt_target as _;
+use heapless::Vec;
 use core::{
     fmt::Write,
     str,
@@ -22,7 +23,6 @@ use microbit::{
     hal::prelude::*,
     hal::uarte,
     hal::uarte::{Baudrate, Parity},
-    pac::UARTE0 as UART0,
 };
 
 #[cfg(feature = "v2")]
@@ -56,13 +56,10 @@ fn main() -> ! {
         UartePort::new(serial)
     };
 
-    const MAX_BYTES: usize = 1024;
+    const BUFFER_SIZE: usize = 1024;
 
-    let mut bytes: [u8; MAX_BYTES] = [0; MAX_BYTES];
-    let mut bytes_length: usize = MAX_BYTES;
-    let mut b_index: usize = MAX_BYTES - 1;
-    let mut utf8_char: [u8; 4] = [0; 4];
-    let mut utf8_index: usize = 0;
+    let mut buffer: Vec<u8, BUFFER_SIZE> = Vec::new();
+    let mut utf8_char: Vec<u8, 4> = Vec::new();
     let mut end_buffer: bool = false;
     loop {
         let byte = if end_buffer {
@@ -72,7 +69,8 @@ fn main() -> ! {
         };
 
         if byte == 13 {
-            let string = str::from_utf8(&bytes[b_index..]);
+            buffer.reverse();
+            let string = str::from_utf8(&buffer[..]);
             match string {
                 Ok(s) => {
                     write!(serial, "\r\n{}\r\n\r\n", s).unwrap();
@@ -83,44 +81,39 @@ fn main() -> ! {
                 }
             }
             // reset data
-            bytes = [0; MAX_BYTES];
-            b_index = MAX_BYTES - 1;
-            bytes_length = MAX_BYTES;
-            utf8_char = [0; 4];
-            utf8_index = 0;
+            buffer = Vec::new();
+            utf8_char = Vec::new();
             end_buffer = false;
         } else {
-            utf8_char[utf8_index] = byte;
-            if let Ok(char) = str::from_utf8(&utf8_char) {
-                write!(serial, "{}", char);
+            if utf8_char.push(byte).is_err() {
+                rprintln!("utf8_char is full");
+                continue;
+            }
+
+            let mut write_success = false;
+            if let Ok(char) = str::from_utf8(&utf8_char[..]) {
+                write!(serial, "{}", char).unwrap();
                 nb::block!(serial.flush()).unwrap();
 
-                if bytes_length <= utf8_index + 1 {
-                    write!(serial, "\r\nBuffer is full.");
+                let space_left = buffer.capacity() - buffer.len();
+                if space_left <= utf8_char.len() {
+                    write!(serial, "\r\nBuffer is full.").unwrap();
                     rprintln!("Buffer is full.");
                     end_buffer = true;
-                    if bytes_length < utf8_index + 1 {
+                    if space_left < utf8_char.len() {
                         continue;
                     }
                 }
 
-                for (i, b) in utf8_char[..=utf8_index].iter().enumerate() {
-                    bytes[b_index + i] = *b;
+                for b in utf8_char.iter().rev() {
+                    buffer.push(*b).unwrap();
                 }
-                utf8_index = 0;
-                bytes_length = b_index;
-            } else if utf8_index < 3 {
-                utf8_index += 1;
-            } else {
-                utf8_index = 0;
+
+                write_success = true;
             }
 
-            if utf8_index == 0 {
-                utf8_char = [0; 4];
-            }
-
-            if b_index != 0 {
-                b_index -= 1;
+            if utf8_char.is_full() || write_success {
+                utf8_char = Vec::new();
             }
         }
     }
