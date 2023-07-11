@@ -91,15 +91,13 @@ fn main() -> ! {
             serial.write_str(str::from_utf8(&[32; MAX_INPUT_LEN]).unwrap());
             serial.write_str("\r");
             serial.write_str(str::from_utf8(&input).unwrap());
-            serial.flush();
         } else if byte == 13 { // If 'enter' is pressed
+            rprintln!("{:?}", input);
             match str::from_utf8(&input) {
                 Ok(s) => {
                     if ["magnetometer", "accelerometer"].iter().any(|o| o == &s) {
-                        // TODO: print sensor data to serial
-                        // let data = sensor.accel_data().unwrap();
-                        // let msg = concat!("{:?}", data.x);
-                        // serial.write_str(data.x);
+                        let data = sensor.accel_data().unwrap();
+                        write!(serial, "\r\nx {} y {} z {}\r\n", data.x, data.y, data.z);
                     } else {
                         serial.write_str("\r\nInvalid selection\r\n");
                     };
@@ -108,17 +106,14 @@ fn main() -> ! {
                     serial.write_str("\r\nInput invalid\r\n");
                 }
             }
-            serial.flush();
             input.clear();
         } else {
             match str::from_utf8(&[byte]) {
                 Ok(s) => {
                     serial.write_str(s);
-                    serial.flush();
                     match input.push(byte) {
                         Err(_) => {
                             serial.write_str("Too many characters! Try again.\r\n");
-                            serial.flush();
                             input.clear();
                         }
                         _ => {}
@@ -133,6 +128,7 @@ fn main() -> ! {
 
 
 
+        serial.flush();
         rprintln!("{}", str::from_utf8(&input).unwrap());
         // if sensor.accel_status().unwrap().xyz_new_data {
         //     let data = sensor.accel_data().unwrap();
