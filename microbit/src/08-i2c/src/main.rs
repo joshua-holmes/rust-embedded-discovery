@@ -36,7 +36,7 @@ use serial_setup::UartePort;
 
 
 use lsm303agr::{
-    AccelOutputDataRate, Lsm303agr
+    AccelOutputDataRate, MagOutputDataRate, Lsm303agr
 };
 
 const MAX_INPUT_LEN: usize = 16;
@@ -75,9 +75,11 @@ fn main() -> ! {
 
     let mut sensor = Lsm303agr::new_with_i2c(i2c);
     sensor.init().unwrap();
-    sensor.set_accel_odr(AccelOutputDataRate::Hz1).unwrap();
+    sensor.set_accel_odr(AccelOutputDataRate::Hz10).unwrap();
+    sensor.set_mag_odr(MagOutputDataRate::Hz10).unwrap();
+    let mut sensor = sensor.into_mag_continuous().ok().unwrap();
 
-    let msg_intro = "Please type either \"accelerometer\" or \"magnetometer\" to view data from that device.\r\n";
+    let msg_intro = "Please type either \"accelerometer\" (or \"a\") or \"magnetometer\" (or \"m\") to view data from that device.\r\n";
     serial.write_str(msg_intro);
     serial.flush();
 
@@ -95,12 +97,22 @@ fn main() -> ! {
             rprintln!("{:?}", input);
             match str::from_utf8(&input) {
                 Ok(s) => {
-                    if ["magnetometer", "accelerometer"].iter().any(|o| o == &s) {
+                    let data = if ["magnetometer", "m"].iter().any(|o| o == &s) {
+                        while !sensor.mag_status().unwrap().xyz_new_data {}
+                        let data = sensor.mag_data().unwrap();
+                        Some(data)
+                    } else if ["accelerometer", "a"].iter().any(|o| o == &s) {
+                        while !sensor.accel_status().unwrap().xyz_new_data {}
                         let data = sensor.accel_data().unwrap();
-                        write!(serial, "\r\nx {} y {} z {}\r\n", data.x, data.y, data.z);
+                        Some(data)
                     } else {
                         serial.write_str("\r\nInvalid selection\r\n");
+                        None
                     };
+
+                    if let Some(data) = data {
+                        write!(serial, "\r\nx {} y {} z {}\r\n", data.x, data.y, data.z);
+                    }
                 }
                 Err(_) => {
                     serial.write_str("\r\nInput invalid\r\n");
