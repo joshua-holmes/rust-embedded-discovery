@@ -3,8 +3,10 @@
 #![no_std]
 
 use cortex_m_rt::entry;
+use libm::atan2f;
 use panic_rtt_target as _;
 use rtt_target::{rprintln, rtt_init_print};
+use core::f32::consts::PI;
 
 mod calibration;
 use crate::calibration::calc_calibration;
@@ -51,11 +53,24 @@ fn main() -> ! {
         let mut data = sensor.mag_data().unwrap();
         data = calibrated_measurement(data, &calibration);
 
-        let dir = match (data.x > 0, data.y > 0) {
-            (true, true) => Direction::NorthEast,
-            (false, true) => Direction::NorthWest,
-            (false, false) => Direction::SouthWest,
-            (true, false) => Direction::SouthEast,
+        let theta = atan2f(data.y as f32, data.x as f32);
+
+        let dir = if (theta < -PI * 7. / 8.) || (theta > PI * 7. / 8.) {
+            Direction::West
+        } else if theta < -PI * 5. / 8. {
+            Direction::SouthWest
+        } else if theta < -PI * 3. / 8. {
+            Direction::South
+        } else if theta < -PI / 8. {
+            Direction::SouthEast
+        } else if theta < PI / 8. {
+            Direction::East
+        } else if theta < PI * 3. / 8. {
+            Direction::NorthEast
+        } else if theta < PI * 5. / 8. {
+            Direction::North
+        } else {
+            Direction::NorthWest
         };
 
         let screen = led::direction_to_led(dir);
