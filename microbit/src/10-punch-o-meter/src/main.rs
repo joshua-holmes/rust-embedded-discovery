@@ -4,14 +4,17 @@
 
 use cortex_m_rt::entry;
 use lsm303agr::Lsm303agr;
-use microbit::hal::twim;
+use microbit::{hal::twim, display::blocking::Display};
 use rtt_target::rtt_init_print;
 use panic_rtt_target as _;
+
+mod leds;
 
 #[entry]
 fn main() -> ! {
     rtt_init_print!();
     let board = microbit::Board::take().unwrap();
+    let display = Display::new(board.display_pins);
 
     let i2c = twim::Twim::new(board.TWIM0, board.i2c_internal.into(), twim::Frequency::K100);
 
