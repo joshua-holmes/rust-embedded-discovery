@@ -1,6 +1,7 @@
 type Screen = [[u8; 5]; 5];
 
-enum LedError {
+#[derive(Debug)]
+pub enum LedError {
     InvalidNumber
 }
 
