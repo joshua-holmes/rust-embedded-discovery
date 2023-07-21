@@ -86,6 +86,86 @@ const NINE: Screen = [
     [0, 0, 0, 1, 0],   
 ];
 
+const TEN: Screen = [
+    [1, 0, 0, 1, 0],
+    [1, 0, 1, 0, 1],   
+    [1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1],
+    [1, 0, 0, 1, 0],   
+];
+
+const ELEVEN: Screen = [
+    [0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0],   
+    [0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0],   
+];
+
+const TWELVE: Screen = [
+    [1, 0, 1, 1, 1],
+    [1, 0, 0, 0, 1],   
+    [1, 0, 1, 1, 1],
+    [1, 0, 1, 0, 0],
+    [1, 0, 1, 1, 1],   
+];
+
+const THIRTEEN: Screen = [
+    [1, 0, 1, 1, 1],
+    [1, 0, 0, 0, 1],   
+    [1, 0, 1, 1, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1],   
+];
+
+const FOURTEEN: Screen = [
+    [1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1],   
+    [1, 0, 1, 1, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],   
+];
+
+const FIFTEEN: Screen = [
+    [1, 0, 1, 1, 1],
+    [1, 0, 1, 0, 0],   
+    [1, 0, 1, 1, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1],   
+];
+
+const SIXTEEN: Screen = [
+    [1, 0, 1, 1, 1],
+    [1, 0, 1, 0, 0],   
+    [1, 0, 1, 1, 1],
+    [1, 0, 1, 0, 1],
+    [1, 0, 1, 1, 1],   
+];
+
+const SEVENTEEN: Screen = [
+    [1, 0, 1, 1, 1],
+    [1, 0, 0, 0, 1],   
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],   
+];
+
+const EIGHTEEN: Screen = [
+    [1, 0, 1, 1, 1],
+    [1, 0, 1, 0, 1],   
+    [1, 0, 1, 1, 1],
+    [1, 0, 1, 0, 1],
+    [1, 0, 1, 1, 1],   
+];
+
+const NINETEEN: Screen = [
+    [1, 0, 1, 1, 1],
+    [1, 0, 1, 0, 1],   
+    [1, 0, 1, 1, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],   
+];
+
 pub fn num_to_screen(num: i32) -> Result<Screen, LedError> {
     match num {
         0 => Ok(ZERO),
@@ -98,6 +178,16 @@ pub fn num_to_screen(num: i32) -> Result<Screen, LedError> {
         7 => Ok(SEVEN),
         8 => Ok(EIGHT),
         9 => Ok(NINE),
+        10 => Ok(TEN),
+        11 => Ok(ELEVEN),
+        12 => Ok(TWELVE),
+        13 => Ok(THIRTEEN),
+        14 => Ok(FOURTEEN),
+        15 => Ok(FIFTEEN),
+        16 => Ok(SIXTEEN),
+        17 => Ok(SEVENTEEN),
+        18 => Ok(EIGHTEEN),
+        19 => Ok(NINETEEN),
         _ => Err(LedError::InvalidNumber)
     }
 }

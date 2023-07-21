@@ -11,7 +11,7 @@ use panic_rtt_target as _;
 mod leds;
 mod calc;
 
-const ACCEL_THRESHOLD: f32 = 1500.;
+const ACCEL_THRESHOLD: f32 = 2000.;
 
 
 #[entry]
@@ -26,7 +26,7 @@ fn main() -> ! {
     let mut sensor = Lsm303agr::new_with_i2c(i2c);
     sensor.init().unwrap();
     sensor.set_accel_odr(AccelOutputDataRate::Hz100).unwrap();
-    sensor.set_accel_scale(lsm303agr::AccelScale::G8).unwrap();
+    sensor.set_accel_scale(lsm303agr::AccelScale::G16).unwrap();
 
     loop {
         while !sensor.accel_status().unwrap().xyz_new_data {}
@@ -35,8 +35,10 @@ fn main() -> ! {
 
         if mag >= ACCEL_THRESHOLD {
             let max_g = calc::record_max_accel_as_i32(&mut sensor, AccelOutputDataRate::Hz100).unwrap();
-            let screen = leds::num_to_screen(max_g).unwrap();
-            display.show(&mut timer, screen, 1000);
+            match leds::num_to_screen(max_g) {
+                Ok(screen) => display.show(&mut timer, screen, 1000),
+                Err(_) => display.show(&mut timer, [[1; 5]; 5], 10000)
+            }
         }
     }
 }
