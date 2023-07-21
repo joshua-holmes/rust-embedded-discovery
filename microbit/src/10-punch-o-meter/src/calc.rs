@@ -37,7 +37,6 @@ pub fn record_max_accel_as_i32(sensor: &mut Lsm303agr<I2cInterface<Twim<TWIM0>>,
         AccelOutputDataRate::Khz1_344 => 1344,
         AccelOutputDataRate::Khz1_620LowPower => 1620,
         AccelOutputDataRate::Khz5_376LowPower => 5376,
-        _ => return Err(CalcError::FrequencyNotSupported)
     };
 
     let mut max = 0;
